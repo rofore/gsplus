@@ -35,6 +35,7 @@ typedef enum {
   DIALOG_GOT_CTS,
   DIALOG_WAIT_IDG
 } DIALOG_STATE;
+
 static DIALOG_STATE dialog_state;
 static double dialog_end_dcycs;
 static double last_frame_dcycs;
@@ -49,7 +50,6 @@ void llap_shutdown() {
   port_shutdown(&llap_port);
 }
 
-
 /** Queue one data packet out from the bridge's LLAP port and into the guest. **/
 void llap_enqueue_out(struct packet_t* packet) {
   // Generate the RTS.
@@ -58,8 +58,11 @@ void llap_enqueue_out(struct packet_t* packet) {
   rts->source.node = packet->source.node;
   rts->dest.network = packet->dest.network;
   rts->dest.node = packet->dest.node;
-  rts->size = 0;
-  rts->data = 0;
+  rts->size = 3;
+  rts->data = calloc(3,1);
+  rts->data[0] = packet->dest.node;
+  rts->data[1] = packet->source.node;
+  rts->data[2] = LLAP_RTS;
   rts->type = LLAP_RTS;
   enqueue_packet(&llap_port.out, rts);
 
@@ -120,10 +123,13 @@ static void llap_dump_packet(size_t size, byte data[]) {
 static void llap_reply_control(at_node_t dest, at_node_t source, LLAP_TYPES type) {
   struct at_addr_t dest_addr = { 0, dest };
   struct at_addr_t source_addr = { 0, source };
-
+  uint8_t *data = calloc(3, 1);
+  data[0] = dest;
+  data[1] = source;
+  data[2] = type;
   // Insert control packets at the head of the queue contrary to normal FIFO queue operation
   // to ensure that control frames arrive in the intended order.
-  insert(&llap_port.out, dest_addr, source_addr, type, 0, 0);
+  insert(&llap_port.out, dest_addr, source_addr, type, 3, data);
 }
 
 /** Accept a data packet from the GS. **/
@@ -132,9 +138,10 @@ static void llap_handle_data(size_t size, byte data[]) {
   at_node_t source = data[1];
   LLAP_TYPES type = (LLAP_TYPES)(data[2]);
 
-  const size_t data_size = size - 3;
+  const size_t data_size = size;
   byte* data_copy = (byte*)malloc(data_size);
-  memcpy(data_copy, data + 3, data_size);
+  // memcpy(data_copy, data, data_size);
+  for (int i = 0; i<size; i++) data_copy[i] = data[i];
 
   struct at_addr_t dest_addr = { 0, dest };
   struct at_addr_t source_addr = { 0, source };
@@ -147,17 +154,8 @@ static void llap_handle_control(size_t size, byte data[]) {
   at_node_t source = data[1];
   LLAP_TYPES type = (LLAP_TYPES)(data[2]);
 
-  struct at_addr_t addr = { atbridge_get_net(), dest };
-
   switch (type)
   {
-    case LLAP_ENQ:
-      // Require the GS to take a valid "client" address not known to be in use.
-      if (dest > 127 || dest == 0 || atbridge_address_used(&addr))
-        llap_reply_control(source, dest, LLAP_ACK);
-      break;
-    case LLAP_ACK:
-      break;
     case LLAP_RTS:
       if (dest != at_broadcast_node)
         // The GS is trying to make a directed transmission.  Provide the required RTS/CTS handshake.
@@ -216,10 +214,10 @@ void llap_enqueue_in(double dcycs, size_t size, byte data[]) {
     {
       case LLAP_DDP_SHORT:
       case LLAP_DDP_LONG:
-        llap_handle_data(size, data);
-        break;
       case LLAP_ENQ:
       case LLAP_ACK:
+        llap_handle_data(size, data);
+        break;
       case LLAP_RTS:
       case LLAP_CTS:
         llap_handle_control(size, data);
@@ -257,7 +255,7 @@ void llap_dequeue_out(double dcycs, size_t* size, byte* data[]) {
     atbridge_printf("ATBridge: Dialog reset due to IFG violation.\n");
   }
 
-  struct packet_t* packet = queue_peek(&llap_port.out);
+  struct packet_t *packet = queue_peek(&llap_port.out);
 
   if ((dialog_state == DIALOG_READY) && (packet) && !(packet->type & 0x80) && (last_frame_dcycs != 0) && ((dcycs - last_frame_dcycs) >= (GAP_TOLERANCE*LLAP_IDG)))
   {
@@ -271,23 +269,23 @@ void llap_dequeue_out(double dcycs, size_t* size, byte* data[]) {
        (!(packet->type & 0x80) && (packet->dest.node == at_broadcast_node) && (dialog_state == DIALOG_READY)) ||           /* Pass along broadcast frames, which don't wait for CTS frames. */
        (!(packet->type & 0x80) && (packet->dest.node != at_broadcast_node) && (dialog_state == DIALOG_GOT_CTS))))           /* Pass along directed frames only after receiving a CTS handshake. */
   {
-    dequeue(&llap_port.out);
+    dequeue(&llap_port.out); //rr inserted packet =
 
     // Prepend the LLAP header.
-    *size = packet->size + 3 + 2;
+    *size = packet->size + 2;
     *data = (byte*)malloc(*size);
-    (*data)[0] = packet->dest.node;
-    (*data)[1] = packet->source.node;
-    (*data)[2] = packet->type;
+    // (*data)[0] = packet->dest.node;
+    // (*data)[1] = packet->source.node;
+    // (*data)[2] = packet->type;
 
     // Insert the data into the new LLAP packet.
     if (*size)
-      memcpy((*data) + 3, packet->data, packet->size);
+      memcpy(*data, packet->data, packet->size);
 
     // Fake a frame check sequence (FCS).  Since our SCC emulation doesn't actually
     // check the FCS, the value of the FCS doesn't matter.
-    (*data)[packet->size + 3 + 0] = 0xff;
-    (*data)[packet->size + 3 + 1] = 0xff;
+    (*data)[packet->size + 0] = 0xff;
+    (*data)[packet->size + 1] = 0xff;
 
     atbridge_printf("<%0.0f> RX: ", dcycs);
     llap_dump_packet(*size, *data);

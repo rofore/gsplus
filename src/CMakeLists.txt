@@ -96,7 +96,7 @@ add_custom_command(
 	COMMAND perl make_size s size_tab.h > ${CMAKE_CURRENT_BINARY_DIR}/size_s.h
 	COMMAND perl make_size 8 size_tab.h > ${CMAKE_CURRENT_BINARY_DIR}/8size_s.h
 	COMMAND perl make_size 16 size_tab.h > ${CMAKE_CURRENT_BINARY_DIR}/16size_s.h
-	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/size_tab.h 
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/size_tab.h
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -137,7 +137,7 @@ endif()
 add_executable(to_pro to_pro.c)
 add_executable(partls partls.c)
 
-add_subdirectory(atbridge)
+add_subdirectory(ltoudp)
 #add_subdirectory(tfe)
 add_subdirectory(rawnet)
 
@@ -173,7 +173,7 @@ set(MACOSX_BUNDLE_GUI_IDENTIFIER com.dagenbrock.gsplus)
 # https://cmake.org/Wiki/CMake:Bundles_And_Frameworks
 # OS X properties.
 add_executable(GSplus WIN32 MACOSX_BUNDLE
-	adb.c clock.c config.c engine_c.c scc.c iwm.c 
+	adb.c clock.c config.c engine_c.c scc.c iwm.c
 	joystick_driver.c moremem.c paddles.c parallel.c printer.cpp sim65816.c
 	smartport.c sound.c sound_driver.c video.c scc_socket_driver.c glog.c
 	imagewriter.cpp scc_imagewriter.c scc_llap.c options.c

@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"assert.h": "c",
+		"ltoudp.h": "c",
+		"atalk.h": "c"
+	}
+}

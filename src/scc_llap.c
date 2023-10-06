@@ -17,8 +17,8 @@ int g_appletalk_diagnostics = 0;
 int g_appletalk_network_hint = 0;
 
 #ifdef HAVE_ATBRIDGE
-#include "atbridge/atbridge.h"
-#include "atbridge/llap.h"
+#include "ltoudp/atbridge.h"
+#include "ltoudp/llap.h"
 
 extern Scc scc_stat[2];
 

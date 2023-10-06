@@ -5,10 +5,13 @@
 	See LICENSE.txt for license (GPL v2)
 */
 
-typedef byte at_node_t;
+#ifndef ATALK_H
+#define ATALK_H
+
+typedef uint8_t at_node_t;
 static const at_node_t at_broadcast_node = 0xFF;
 
-typedef word16 at_network_t;
+typedef uint16_t at_network_t;
 
 #pragma pack(push, 1)
 struct at_addr_t
@@ -54,23 +57,23 @@ enum DDP_TYPES { /* reference C-6 */
 #pragma pack(push, 1)
 struct DDP_LONG
 {
-	byte length[2];
-	word16 checksum;
+	uint8_t length[2];
+	uint16_t checksum;
 	at_network_t dest_net;
 	at_network_t source_net;
 	at_node_t dest_node;
 	at_node_t source_node;
-	byte dest_socket;
-	byte source_socket;
-	byte type;
+	uint8_t dest_socket;
+	uint8_t source_socket;
+	uint8_t type;
 };
 
 struct DDP_SHORT
 {
-	byte length[2];
-	byte dest_socket;
-	byte source_socket;
-	byte type;
+	uint8_t length[2];
+	uint8_t dest_socket;
+	uint8_t source_socket;
+	uint8_t type;
 };
 
 enum RTMP_FUNCTIONS { /* reference C-8*/
@@ -81,45 +84,48 @@ enum RTMP_FUNCTIONS { /* reference C-8*/
 
 struct rtmp_request_t
 {
-	byte function;
+	uint8_t function;
 };
 
 struct rtmp_nonextended_data_t
 {
 	at_network_t net;
-	byte id_length;
+	uint8_t id_length;
 	at_node_t node;
-	word16 zero;
-	byte delimiter;
+	uint16_t zero;
+	uint8_t delimiter;
 };
 
 struct rtmp_nonextended_response_t
 {
 	at_network_t net;
-	byte id_length;
+	uint8_t id_length;
 	at_node_t node;
 };
 
 struct rtmp_extended_data_t
 {
 	at_network_t net;
-	byte id_length;
+	uint8_t id_length;
 	at_node_t node;
 };
 
 struct rtmp_nonextended_tuple_t
 {
 	at_network_t net;
-	byte distance;
+	uint8_t distance;
 };
 
 struct rtmp_extended_tuple_t
 {
 	at_network_t range_start;
-	byte distance;
+	uint8_t distance;
 	at_network_t range_end;
-	byte delimiter;
+	uint8_t delimiter;
 };
 
-static const byte RTMP_TUPLE_DELIMITER = 0x82;
+static const uint8_t RTMP_TUPLE_DELIMITER = 0x82;
 #pragma pack(pop)
+
+
+#endif /* ATALK_H */

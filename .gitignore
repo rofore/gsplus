@@ -10,6 +10,8 @@ src/16inst_c.h
 src/8inst_c.h
 src/size_c.h
 
+build/*
+
 gsplus
 gsportx
 gsport
@@ -17,7 +19,7 @@ gsport
 
 *.gsp
 
-# Storage for many disk images for testing the emulator.  
+# Storage for many disk images for testing the emulator.
 # Games, demos, apps, etc.  Not part of the project.
 images/
 
