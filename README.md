@@ -1,6 +1,7 @@
-# GS+ 
+# GS+ LToUDP Edition
 
-An Apple IIgs emulator based on KEGS
+An Apple IIgs emulator based on KEGS. Uses LToUDP for AppleTalk networking instead of LocalTalk/EtherTalk bridging. Still experimental and cleanup/rework is needed. Tested on Mac OS 12 only!
+
 
 # Build instructions
 
